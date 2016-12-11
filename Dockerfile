@@ -23,3 +23,6 @@ RUN apt-get update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 CMD ["./extra/service_startup.sh"]
+
+EXPOSE 443
+VOLUME /var/lib/mysql
