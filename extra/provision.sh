@@ -75,7 +75,7 @@ function usage() {
   printf "\nArguments for TYPE:\n"
   printf "  self \tProvision will use a self-signed SSL certificate that will be generated.\n"
   printf "  own \tProvision will use the SSL certificate provided by the user.\n"
-  printf "  cerbot Provision will generate a SSL certificate using letsencrypt/certbot. More info here: https://certbot.eff.org/\n"
+  printf "  certbot Provision will generate a SSL certificate using letsencrypt/certbot. More info here: https://certbot.eff.org/\n"
   printf "\nOptional Parameters:\n"
   printf "  -U,      --update \t\tPull from master GitHub branch and sync files to fbctf folder.\n"
   printf "  -R,      --no-repo-mode \tDisables HHVM Repo Authoritative mode in production mode.\n"
@@ -288,6 +288,9 @@ import_empty_db "root" "$P_ROOT" "$DB" "$CTF_PATH" "$MODE"
 # Make attachments folder world writable
 sudo chmod 777 "$CTF_PATH/src/data/attachments"
 sudo chmod 777 "$CTF_PATH/src/data/attachments/deleted"
+# Make custom logos folder, and make it world writable
+sudo mkdir -p "$CTF_PATH/src/data/customlogos"
+sudo chmod 777 "$CTF_PATH/src/data/customlogos"
 
 # Display the final message, depending on the context
 if [[ -d "/vagrant" ]]; then

@@ -185,7 +185,7 @@ CREATE TABLE `configuration` (
 LOCK TABLES `configuration` WRITE;
 INSERT INTO `configuration` (field, value, description) VALUES("game", "0", "(Boolean) Game is ongoing");
 INSERT INTO `configuration` (field, value, description) VALUES("game_paused", "0", "(Boolean) Game is paused");
-INSERT INTO `configuration` (field, value, description) VALUES("next_game", "0", "(Date) Next game to happen");
+INSERT INTO `configuration` (field, value, description) VALUES("next_game", "0", "(Integer) Next game to happen");
 INSERT INTO `configuration` (field, value, description) VALUES("game_duration_value", "3", "(Integer) Value of the duration of the game");
 INSERT INTO `configuration` (field, value, description) VALUES("game_duration_unit", "h", "(Character) Unit of the duration of the game");
 INSERT INTO `configuration` (field, value, description) VALUES("start_ts", "0", "(Integer) Timestamp of start");
@@ -196,6 +196,7 @@ INSERT INTO `configuration` (field, value, description) VALUES("scoring", "0", "
 INSERT INTO `configuration` (field, value, description) VALUES("gameboard", "1", "(Boolean) Refresh all data in the gameboard");
 INSERT INTO `configuration` (field, value, description) VALUES("progressive_cycle", "300", "(Integer) Frequency to take progressive scoreboard in seconds");
 INSERT INTO `configuration` (field, value, description) VALUES("bases_cycle", "5", "(Integer) Frequency to score base levels in seconds");
+INSERT INTO `configuration` (field, value, description) VALUES("autorun_cycle", "30", "(Integer) Frequency to cycle autorun in seconds");
 INSERT INTO `configuration` (field, value, description) VALUES("registration", "0", "(Boolean) Ability to register teams");
 INSERT INTO `configuration` (field, value, description) VALUES("registration_names", "0", "(Boolean) Registration will ask for names");
 INSERT INTO `configuration` (field, value, description) VALUES("registration_type", "1", "(Integer) Type of registration: 1 - Open; 2 - Tokenized;");

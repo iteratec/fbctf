@@ -17,6 +17,7 @@ class Attachment extends Model {
     private int $id,
     private int $levelId,
     private string $filename,
+    private string $type,
   ) {}
 
   public function getId(): int {
@@ -25,6 +26,10 @@ class Attachment extends Model {
 
   public function getFilename(): string {
     return $this->filename;
+  }
+
+  public function getType(): string {
+    return $this->type;
   }
 
   public function getLevelId(): int {
@@ -65,6 +70,16 @@ class Attachment extends Model {
       move_uploaded_file(
         $tmp_name,
         must_have_string($server, 'DOCUMENT_ROOT').$local_filename,
+      );
+
+      // Force 0600 Permissions
+      $chmod = chmod(
+        must_have_string($server, 'DOCUMENT_ROOT').$local_filename,
+        0600,
+      );
+      invariant(
+        $chmod === true,
+        'Failed to set attachment file permissions to 0600',
       );
     } else {
       return false;
@@ -255,6 +270,22 @@ class Attachment extends Model {
     }
   }
 
+  public static async function genImportAttachments(
+    int $level_id,
+    string $filename,
+    string $type,
+  ): Awaitable<bool> {
+    $db = await self::genDb();
+    await $db->queryf(
+      'INSERT INTO attachments (filename, type, level_id, created_ts) VALUES (%s, %s, %d, NOW())',
+      $filename,
+      (string) $type,
+      $level_id,
+    );
+
+    return true;
+  }
+
   private static function attachmentFromRow(
     Map<string, string> $row,
   ): Attachment {
@@ -262,6 +293,7 @@ class Attachment extends Model {
       intval(must_have_idx($row, 'id')),
       intval(must_have_idx($row, 'level_id')),
       must_have_idx($row, 'filename'),
+      must_have_idx($row, 'type'),
     );
   }
 }

@@ -272,6 +272,7 @@ class AdminController extends Controller {
 
   public async function genRenderConfigurationContent(): Awaitable<:xhp> {
     $awaitables = Map {
+      'game' => Configuration::gen('game'),
       'registration' => Configuration::gen('registration'),
       'registration_players' => Configuration::gen('registration_players'),
       'login' => Configuration::gen('login'),
@@ -289,12 +290,14 @@ class AdminController extends Controller {
       'default_bonus' => Configuration::gen('default_bonus'),
       'default_bonusdec' => Configuration::gen('default_bonusdec'),
       'bases_cycle' => Configuration::gen('bases_cycle'),
+      'autorun_cycle' => Configuration::gen('autorun_cycle'),
       'start_ts' => Configuration::gen('start_ts'),
       'end_ts' => Configuration::gen('end_ts'),
     };
 
     $results = await \HH\Asio\m($awaitables);
 
+    $game = $results['game'];
     $registration = $results['registration'];
     $registration_players = $results['registration_players'];
     $login = $results['login'];
@@ -312,6 +315,7 @@ class AdminController extends Controller {
     $default_bonus = $results['default_bonus'];
     $default_bonusdec = $results['default_bonusdec'];
     $bases_cycle = $results['bases_cycle'];
+    $autorun_cycle = $results['autorun_cycle'];
     $start_ts = $results['start_ts'];
     $end_ts = $results['end_ts'];
 
@@ -334,12 +338,39 @@ class AdminController extends Controller {
     $timer_on = $timer->getValue() === '1';
     $timer_off = $timer->getValue() === '0';
 
-    if ($start_ts->getValue() === '0') {
-      $start_ts = tr('Not started yet');
-      $end_ts = tr('Not started yet');
+    $game_start_array = array();
+    if ($start_ts->getValue() !== '0' && $start_ts->getValue() !== 'NaN') {
+      $game_start_ts = $start_ts->getValue();
+      $game_start_array = getdate($game_start_ts);
     } else {
-      $start_ts = date(tr('date and time format'), $start_ts->getValue());
-      $end_ts = date(tr('date and time format'), $end_ts->getValue());
+      $game_start_ts = '0';
+      $game_start_array['year'] = '0';
+      $game_start_array['mon'] = '0';
+      $game_start_array['mday'] = '0';
+      $game_start_array['hours'] = '0';
+      $game_start_array['minutes'] = '0';
+    }
+
+    $game_end_array = array();
+    if ($end_ts->getValue() !== '0' && $end_ts->getValue() !== 'NaN') {
+      $game_end_ts = $end_ts->getValue();
+      $game_end_array = getdate($game_end_ts);
+    } else {
+      $game_end_ts = '0';
+      $game_end_array['year'] = '0';
+      $game_end_array['mon'] = '0';
+      $game_end_array['mday'] = '0';
+      $game_end_array['hours'] = '0';
+      $game_end_array['minutes'] = '0';
+    }
+
+    if ($game->getValue() === '0') {
+      $timer_start_ts = tr('Not started yet');
+      $timer_end_ts = tr('Not started yet');
+    } else {
+      $timer_start_ts =
+        date(tr('date and time format'), $start_ts->getValue());
+      $timer_end_ts = date(tr('date and time format'), $end_ts->getValue());
     }
 
     $registration_type = await Configuration::gen('registration_type');
@@ -685,7 +716,112 @@ class AdminController extends Controller {
                     </div>
                   </div>
                   <div class="col col-pad col-4-4">
+                    <div class="form-el el--block-label">
+                      <label>{tr('Autorun Cycle (s)')}</label>
+                      <input
+                        type="number"
+                        value={$autorun_cycle->getValue()}
+                        name="fb--conf--autorun_cycle"
+                      />
+                    </div>
                     <div class="form-el el--block-label"></div>
+                  </div>
+                </div>
+              </section>
+              <section class="admin-box">
+                <header class="admin-box-header">
+                  <h3>{tr('Game Schedule')}</h3>
+                </header>
+                <div class="fb-column-container">
+                  <div class="col col-pad col-1-5">
+                    <div class="form-el el--block-label el--full-text">
+                      <label for="">{tr('Game Start Year')}</label>
+                      <input
+                        type="number"
+                        value={strval($game_start_array['year'])}
+                        name="fb--schedule--start_year"
+                      />
+                    </div>
+                    <div class="form-el el--block-label el--full-text">
+                      <label for="">{tr('Game End Year')}</label>
+                      <input
+                        type="number"
+                        value={strval($game_end_array['year'])}
+                        name="fb--schedule--end_year"
+                      />
+                    </div>
+                  </div>
+                  <div class="col col-pad col-2-5">
+                    <div class="form-el el--block-label el--full-text">
+                      <label for="">{tr('Month')}</label>
+                      <input
+                        type="number"
+                        value={strval($game_start_array['mon'])}
+                        name="fb--schedule--start_month"
+                      />
+                    </div>
+                    <div class="form-el el--block-label el--full-text">
+                      <label for="">{tr('Month')}</label>
+                      <input
+                        type="number"
+                        value={strval($game_end_array['mon'])}
+                        name="fb--schedule--end_month"
+                      />
+                    </div>
+                  </div>
+                  <div class="col col-pad col-3-5">
+                    <div class="form-el el--block-label el--full-text">
+                      <label for="">{tr('Day')}</label>
+                      <input
+                        type="number"
+                        value={strval($game_start_array['mday'])}
+                        name="fb--schedule--start_day"
+                      />
+                    </div>
+                    <div class="form-el el--block-label el--full-text">
+                      <label for="">{tr('Day')}</label>
+                      <input
+                        type="number"
+                        value={strval($game_end_array['mday'])}
+                        name="fb--schedule--end_day"
+                      />
+                    </div>
+                  </div>
+                  <div class="col col-pad col-4-5">
+                    <div class="form-el el--block-label el--full-text">
+                      <label for="">{tr('Hour')}</label>
+                      <input
+                        type="number"
+                        value={strval($game_start_array['hours'])}
+                        name="fb--schedule--start_hour"
+                      />
+                    </div>
+                    <div class="form-el el--block-label el--full-text">
+                      <label for="">{tr('Hour')}</label>
+                      <input
+                        type="number"
+                        value={strval($game_end_array['hours'])}
+                        name="fb--schedule--end_hour"
+                      />
+                    </div>
+                  </div>
+                  <div class="col col-pad col-5-5">
+                    <div class="form-el el--block-label el--full-text">
+                      <label for="">{tr('Minute')}</label>
+                      <input
+                        type="number"
+                        value={strval($game_start_array['minutes'])}
+                        name="fb--schedule--start_min"
+                      />
+                    </div>
+                    <div class="form-el el--block-label el--full-text">
+                      <label for="">{tr('Minute')}</label>
+                      <input
+                        type="number"
+                        value={strval($game_end_array['minutes'])}
+                        name="fb--schedule--end_min"
+                      />
+                    </div>
                   </div>
                 </div>
               </section>
@@ -727,23 +863,23 @@ class AdminController extends Controller {
                       {$configuration_duration_select}
                     </div>
                   </div>
-                  <div class="col col-pad col-2-4">
+                  <div class="col col-pad col-3-4">
                     <div class="form-el el--block-label el--full-text">
                       <label for="">{tr('Begin Time')}</label>
                       <input
                         type="text"
-                        value={$start_ts}
+                        value={$timer_start_ts}
                         id="fb--conf--start_ts"
                         disabled={true}
                       />
                     </div>
                   </div>
-                  <div class="col col-pad col-3-4">
+                  <div class="col col-pad col-4-4">
                     <div class="form-el el--block-label el--full-text">
                       <label for="">{tr('Expected End Time')}</label>
                       <input
                         type="text"
-                        value={$end_ts}
+                        value={$timer_end_ts}
                         id="fb--conf--end_ts"
                         disabled={true}
                       />
@@ -874,10 +1010,16 @@ class AdminController extends Controller {
                 <div class="form-el el--block-label el--full-text">
                   <div class="admin-buttons">
                     <button
-                      class="fb-cta cta--yellow"
-                      data-action="backup-db">
-                      {tr('Back Up Database')}
+                      class="fb-cta cta--red"
+                      data-action="import-game">
+                      {tr('Import Full Game')}
                     </button>
+                    <input
+                      class="completely-hidden"
+                      id="import-game_file"
+                      type="file"
+                      name="game_file"
+                    />
                   </div>
                 </div>
               </div>
@@ -892,20 +1034,56 @@ class AdminController extends Controller {
                   </div>
                 </div>
               </div>
+            </div>
+          </section>
+          <section class="admin-box">
+            <header class="admin-box-header">
+              <h3>{tr('Utilities')}</h3>
+            </header>
+            <div class="fb-column-container">
+              <div class="col col-pad col-1-4">
+                <div class="form-el el--block-label el--full-text">
+                  <div class="admin-buttons">
+                    <button
+                      class="fb-cta cta--yellow"
+                      data-action="flush-memcached">
+                      {tr('Flush Memcached')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="col col-pad col-1-4">
+                <div class="form-el el--block-label el--full-text">
+                  <div class="admin-buttons">
+                    <button class="fb-cta cta--red js-reset-database">
+                      {tr('Reset Database')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="col col-pad col-1-3">
+                <div class="form-el el--block-label el--full-text">
+                  <div class="admin-buttons">
+                    <button class="fb-cta cta--red js-restore-database">
+                      {tr('Restore Database')}
+                    </button>
+                    <input
+                      class="completely-hidden"
+                      id="restore-database_file"
+                      type="file"
+                      name="database_file"
+                    />
+                  </div>
+                </div>
+              </div>
               <div class="col col-pad col-1-3">
                 <div class="form-el el--block-label el--full-text">
                   <div class="admin-buttons">
                     <button
                       class="fb-cta cta--yellow"
-                      data-action="import-game">
-                      {tr('Import Full Game')}
+                      data-action="backup-db">
+                      {tr('Backup Database')}
                     </button>
-                    <input
-                      class="completely-hidden"
-                      id="import-game_file"
-                      type="file"
-                      name="game_file"
-                    />
                   </div>
                 </div>
               </div>
@@ -1007,6 +1185,41 @@ class AdminController extends Controller {
                   </div>
                 </div>
               </div>
+              <div class="col col-pad col-1-4">
+                <div class="form-el el--block-label el--full-text">
+                  <div class="admin-buttons">
+                    <button
+                      class="fb-cta cta--red"
+                      data-action="import-attachments">
+                      {tr('Import Attachments')}
+                    </button>
+                    <input
+                      class="completely-hidden"
+                      id="import-attachments_file"
+                      type="file"
+                      name="attachments_file"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="col col-pad col-1-4">
+                <div class="form-el el--block-label el--full-text">
+                  <div class="admin-buttons">
+                    <button
+                      class="fb-cta cta--yellow"
+                      data-action="export-attachments">
+                      {tr('Export Attachments')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class="admin-box">
+            <header class="admin-box-header">
+              <h3>{tr('Categories')}</h3>
+            </header>
+            <div class="fb-column-container">
               <div class="col col-pad col-1-4">
                 <div class="form-el el--block-label el--full-text">
                   <div class="admin-buttons">
@@ -2699,6 +2912,10 @@ class AdminController extends Controller {
     if (count($failures) > 0) {
       $failures_tbody = <tbody></tbody>;
       foreach ($failures as $failure) {
+        $check_status = await Level::genCheckStatus($failure->getLevelId());
+        if (!$check_status) {
+          continue;
+        }
         $level = await Level::gen($failure->getLevelId());
         $country = await Country::gen($level->getEntityId());
         $level_str = $country->getName().' - '.$level->getTitle();
@@ -2893,7 +3110,17 @@ class AdminController extends Controller {
     $c = 1;
     $all_teams = await Team::genAllTeams();
     foreach ($all_teams as $team) {
-      $xlink_href = '#icon--badge-'.$team->getLogo();
+      $logo_model = await $team->getLogoModel();
+      if ($logo_model->getCustom()) {
+        $image = <img class="icon--badge" src={$logo_model->getLogo()}></img>;
+      } else {
+        $iconbadge = '#icon--badge-'.$logo_model->getName();
+        $image =
+          <svg class="icon--badge">
+            <use href={$iconbadge} />
+          </svg>;
+      }
+
       $team_protected = $team->getProtected();
       $team_active_on = $team->getActive();
       $team_active_off = !$team->getActive();
@@ -2901,6 +3128,7 @@ class AdminController extends Controller {
       $team_admin_off = !$team->getAdmin();
       $team_visible_on = $team->getVisible();
       $team_visible_off = !$team->getVisible();
+      $team_id = strval($team->getId());
 
       $team_status_name = 'fb--teams--team-'.strval($team->getId()).'-status';
       $team_status_on_id =
@@ -2980,9 +3208,15 @@ class AdminController extends Controller {
             <label for={$team_admin_off_id}>{tr('Off')}</label>
           </div>;
         $delete_button =
-          <button class="fb-cta cta--red" data-action="delete">
-            {tr('Delete')}
-          </button>;
+          <div style="display: inline">
+            <input type="hidden" name="team_id" value={$team_id} />
+            <a
+              href="#"
+              class="fb-cta cta--red js-delete-team"
+              style="margin-right: 20px">
+              {tr('Delete')}
+            </a>
+          </div>;
       }
 
       $tab_team = 'team'.strval($team->getId());
@@ -3101,10 +3335,7 @@ class AdminController extends Controller {
                     <div class="fb-column-container">
                       <div class="col col-shrink">
                         <div class="post-avatar has-avatar">
-                          <svg class="icon icon--badge">
-                            <use href={$xlink_href} />
-
-                          </svg>
+                          {$image}
                         </div>
                       </div>
                       <div class="form-el--required col col-grow">
@@ -3182,8 +3413,17 @@ class AdminController extends Controller {
     $adminsections = <div class="admin-sections"></div>;
 
     $all_logos = await Logo::genAllLogos();
+
     foreach ($all_logos as $logo) {
-      $xlink_href = '#icon--badge-'.$logo->getName();
+      if ($logo->getCustom()) {
+        $image = <img class="icon--badge" src={$logo->getLogo()}></img>;
+      } else {
+        $iconbadge = '#icon--badge-'.$logo->getName();
+        $image =
+          <svg class="icon--badge">
+            <use href={$iconbadge} />
+          </svg>;
+      }
       $using_logo = await MultiTeam::genWhoUses($logo->getName());
       $current_use = (count($using_logo) > 0) ? tr('Yes') : tr('No');
       if ($logo->getEnabled()) {
@@ -3232,10 +3472,7 @@ class AdminController extends Controller {
             <div class="fb-column-container">
               <div class="col col-pad col-shrink">
                 <div class="post-avatar has-avatar">
-                  <svg class="icon icon--badge">
-                    <use href={$xlink_href}></use>
-
-                  </svg>
+                  {$image}
                 </div>
               </div>
               <div class="col col-pad col-grow">
