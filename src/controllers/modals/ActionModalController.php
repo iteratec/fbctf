@@ -77,28 +77,6 @@ class ActionModalController extends ModalController {
             </div>
           </div>;
         return tuple($title, $content);
-      case 'delete-team':
-        $title =
-          <h4>
-            {tr('delete_')}<span class="highlighted">{tr('Team')}</span>
-          </h4>;
-        $content =
-          <div class="action-main">
-            <p>
-              {tr(
-                'Are you sure you want to delete this team? All data for this team will be irreversibly removed, including scoring logs. If you prefer to retain data, you can disable the team instead.',
-              )}
-            </p>
-            <div class="action-actionable">
-              <a href="#" class="fb-cta cta--red js-close-modal">
-                {tr('No')}
-              </a>
-              <a href="#" id="delete_team" class="fb-cta cta--yellow">
-                {tr('Yes')}
-              </a>
-            </div>
-          </div>;
-        return tuple($title, $content);
       case 'logout':
         $title =
           <h4>
@@ -189,52 +167,10 @@ class ActionModalController extends ModalController {
           <div class="action-main">
             <p>{tr('Items have been imported successfully')}</p>
             <div class="action-actionable">
-              <a href="#" class="fb-cta cta--yellow js-close-modal">
+              <a
+                href="#"
+                class="fb-cta cta--yellow js-close-modal js-confirm-save">
                 {tr('OK')}
-              </a>
-            </div>
-          </div>;
-        return tuple($title, $content);
-      case 'restore-database':
-        $title =
-          <h4>
-            {tr('restore_')}<span class="highlighted">{tr('Database')}</span>
-          </h4>;
-        $content =
-          <div class="action-main">
-            <p>
-              {tr(
-                'Are you sure you want to restore the database? This will overwrite ALL existing data!',
-              )}
-            </p>
-            <div class="action-actionable">
-              <a href="#" class="fb-cta cta--red js-close-modal">
-                {tr('No')}
-              </a>
-              <a href="#" id="restore_database" class="fb-cta cta--yellow">
-                {tr('Yes')}
-              </a>
-            </div>
-          </div>;
-        return tuple($title, $content);
-      case 'reset-database':
-        $title =
-          <h4>
-            {tr('reset_')}<span class="highlighted">{tr('Database')}</span>
-          </h4>;
-        $content =
-          <div class="action-main">
-            <p>
-              {tr(
-                'Are you sure you want to reset the database? This will destroy ALL data! Admin accounts will remain.',
-              )}
-            </p>
-            <div class="action-actionable">
-              <a href="#" class="fb-cta cta--red js-close-modal">
-                {tr('No')}
-              </a>
-              <a href="#" id="reset_database" class="fb-cta cta--yellow">
-                {tr('Yes')}
               </a>
             </div>
           </div>;

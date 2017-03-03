@@ -24,14 +24,8 @@ class TeamDataController extends DataController {
       $quiz = await MultiTeam::genPointsByType($team->getId(), 'quiz');
       $flag = await MultiTeam::genPointsByType($team->getId(), 'flag');
 
-      $logo_model = await $team->getLogoModel();
-
       $team_data = (object) array(
-        'logo' => array(
-          'path' => $logo_model->getLogo(),
-          'name' => $logo_model->getName(),
-          'custom' => $logo_model->getCustom(),
-        ),
+        'badge' => $team->getLogo(),
         'team_members' => array(),
         'rank' => $rank,
         'points' => array(

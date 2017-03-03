@@ -10,22 +10,9 @@ abstract class Controller {
   public async function genRender(): Awaitable<:xhp> {
     $page = $this->processRequest();
     $body = await $this->genRenderBody($page);
-    $config = await Configuration::gen('language');
-    $language = $config->getValue();
-    if (!preg_match('/^\w{2}$/', $language)) {
-      $language = 'en';
-    }
-    // TODO: Potential LFI - Review how to do internationalization better
-    $document_root = must_have_string(Utils::getSERVER(), 'DOCUMENT_ROOT');
-    $language_style = '';
-    if (file_exists(
-          $document_root.'/static/css/locals/'.$language.'/style.css',
-        )) {
-      $language_style = 'static/css/locals/'.$language.'/style.css';
-    }
     return
       <x:doctype>
-        <html lang={$language}>
+        <html lang="en">
           <head>
             <meta http-equiv="Cache-control" content="no-cache" />
             <meta http-equiv="Expires" content="-1" />
@@ -41,7 +28,6 @@ abstract class Controller {
               href="static/img/favicon.png"
             />
             <link rel="stylesheet" href="static/css/fb-ctf.css" />
-            <link rel="stylesheet" href={$language_style} />
           </head>
           {$body}
         </html>

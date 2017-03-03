@@ -1,5 +1,5 @@
 FROM ubuntu:trusty
-LABEL maintainer="Boik Su <boik@tdohacker.org>"
+MAINTAINER Boik boik@tdohacker.org
 
 ENV HOME /root
 

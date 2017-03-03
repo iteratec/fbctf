@@ -37,23 +37,6 @@ function unpauseGame() {
   sendAdminRequest(unpause_data, true);
 }
 
-//Confirm team deletion
-function deleteTeamPopup(team_id) {
-  var delete_team = {
-    action: 'delete_team',
-    team_id: team_id
-  };
-  sendAdminRequest(delete_team, true);
-}
-
-// Reset the database
-function resetDatabase() {
-  var reset_database = {
-    action: 'reset_database'
-  };
-  sendAdminRequest(reset_database, true);
-}
-
 /**
  * submits an ajax request to the admin endpoint
  *
@@ -408,14 +391,6 @@ function createAnnouncement(section) {
   }
 }
 
-//Create and download attachments backup
-function attachmentsExport() {
-  var csrf_token = $('input[name=csrf_token]')[0].value;
-  var action = 'export_attachments';
-  var url = 'index.php?p=admin&ajax=true&action=' + action + '&csrf_token=' + csrf_token;
-  window.location.href = url;
-}
-
 // Create and download database backup
 function databaseBackup() {
   var csrf_token = $('input[name=csrf_token]')[0].value;
@@ -452,28 +427,13 @@ function submitImport(type_file, action_file) {
     var responseData = JSON.parse(data);
     if (responseData.result == 'OK') {
       console.log('OK');
-       Modal.loadPopup('p=action&modal=import-done', 'action-import', function() {
-         var ok_button = $("a[class='fb-cta cta--yellow js-close-modal']");
-         ok_button.attr('href', '?p=admin&page=controls');
-         ok_button.removeClass('js-close-modal');
-       });
+       Modal.loadPopup('p=action&modal=import-done', 'action-import');
     } else {
       console.log('Failed');
       Modal.loadPopup('p=action&modal=error', 'action-error', function() {
         $('.error-text').html('<p>Sorry there was a problem importing the items. Please try again.</p>');
-        var ok_button = $("a[class='fb-cta cta--yellow js-close-modal']");
-        ok_button.attr('href', '?p=admin&page=controls');
-        ok_button.removeClass('js-close-modal');
       });
     }
-  });
-}
-
-//Restore and replace database
-function databaseRestore() {
-  $('#restore-database_file').trigger('click');
-  $('#restore-database_file').change(function() {
-    submitImport('database_file', 'restore_db');
   });
 }
 
@@ -517,14 +477,6 @@ function importLevels() {
   });
 }
 
-//Import and replace current attachments
-function importAttachments() {
-  $('#import-attachments_file').trigger('click');
-  $('#import-attachments_file').change(function() {
-    submitImport('attachments_file', 'import_attachments');
-  });
-}
-
 // Export and download current teams
 function exportCurrentTeams() {
   var csrf_token = $('input[name=csrf_token]')[0].value;
@@ -555,14 +507,6 @@ function exportCurrentCategories() {
   var action = 'export_categories';
   var url = 'index.php?p=admin&ajax=true&action=' + action + '&csrf_token=' + csrf_token;
   window.location.href = url;
-}
-
-// Flush Memcached
-function flushMemcached() {
-  var flush_memcached = {
-    action: 'flush_memcached'
-  };
-  sendAdminRequest(flush_memcached, true);
 }
 
 // Create tokens
@@ -1054,8 +998,6 @@ module.exports = {
         }
       } else if (action === 'create-announcement') {
         createAnnouncement($section);
-      } else if (action === 'export-attachments') {
-        attachmentsExport();
       } else if (action === 'backup-db') {
         databaseBackup();
       } else if (action === 'import-game') {
@@ -1076,16 +1018,12 @@ module.exports = {
         exportCurrentLogos();
       } else if (action === 'import-levels') {
         importLevels();
-      } else if (action === 'import-attachments') {
-        importAttachments();
       } else if (action === 'export-levels') {
         exportCurrentLevels();
       } else if (action === 'import-categories') {
         importCategories();
       } else if (action === 'export-categories') {
         exportCurrentCategories();
-      } else if (action === 'flush-memcached') {
-        flushMemcached();
       } else if (action === 'create-tokens') {
         createTokens();
       } else if (action === 'export-tokens') {
@@ -1189,29 +1127,6 @@ module.exports = {
       }
       if (!$(this).hasClass('not_configuration')) {
         changeConfiguration(field, value);
-      }
-    });
-
-    // game schedule fields
-    $('input[type="number"][name^="fb--schedule"]').on('change', function() {
-      var start_year = $('input[type="number"][name="fb--schedule--start_year"]')[0].value;
-      var start_month = $('input[type="number"][name="fb--schedule--start_month"]')[0].value;
-      var start_day = $('input[type="number"][name="fb--schedule--start_day"]')[0].value;
-      var start_hour = $('input[type="number"][name="fb--schedule--start_hour"]')[0].value;
-      var start_min = $('input[type="number"][name="fb--schedule--start_min"]')[0].value;
-      var start_ts = new Date(start_month + "/" + start_day + "/" + start_year + " " + start_hour + ":" + start_min).getTime() / 1000;
-      if ($.isNumeric(start_ts)) {
-        changeConfiguration("start_ts", start_ts);
-        changeConfiguration("next_game", start_ts);
-      }
-      var end_year = $('input[type="number"][name="fb--schedule--end_year"]')[0].value;
-      var end_month = $('input[type="number"][name="fb--schedule--end_month"]')[0].value;
-      var end_day = $('input[type="number"][name="fb--schedule--end_day"]')[0].value;
-      var end_hour = $('input[type="number"][name="fb--schedule--end_hour"]')[0].value;
-      var end_min = $('input[type="number"][name="fb--schedule--end_min"]')[0].value;
-      var end_ts = new Date(end_month + "/" + end_day + "/" + end_year + " " + end_hour + ":" + end_min).getTime() / 1000;
-      if ($.isNumeric(end_ts)) {
-        changeConfiguration("end_ts", end_ts);
       }
     });
 
@@ -1387,17 +1302,6 @@ module.exports = {
       });
     });
 
-    // prompt delete team
-    $('.js-delete-team').on('click', function(event) {
-      event.preventDefault();
-      var team_id = $(this).prev('input').attr('value');
-      Modal.loadPopup('p=action&modal=delete-team', 'action-delete-team', function() {
-        $('#delete_team').click(function() {
-          deleteTeamPopup(team_id);
-        });
-      });
-    });
-
     // prompt logout
     $('.js-prompt-logout').on('click', function(event) {
       event.preventDefault();
@@ -1416,20 +1320,5 @@ module.exports = {
       }
     });
 
-    // prompt reset database
-    $('.js-reset-database').on('click', function(event) {
-      event.preventDefault();
-      Modal.loadPopup('p=action&modal=reset-database', 'action-reset-database', function() {
-        $('#reset_database').click(resetDatabase);
-      });
-    });
-
-    // prompt restore database
-    $('.js-restore-database').on('click', function(event) {
-      event.preventDefault();
-      Modal.loadPopup('p=action&modal=restore-database', 'action-restore-database', function() {
-        $('#restore_database').click(databaseRestore);
-      });
-    });
   }
 };

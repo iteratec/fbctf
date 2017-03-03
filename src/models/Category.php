@@ -83,8 +83,7 @@ class Category extends Model implements Importable, Exportable {
     if (!$mc_result || count($mc_result) === 0 || $refresh) {
       $db = await self::genDb();
       $categories = array();
-      $result =
-        await $db->queryf('SELECT * FROM categories ORDER BY category ASC');
+      $result = await $db->queryf('SELECT * FROM categories');
       foreach ($result->mapRows() as $row) {
         $categories[] = self::categoryFromRow($row);
       }
