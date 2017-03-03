@@ -20,7 +20,8 @@
 #   certbot Provision will generate a SSL certificate using letsencrypt/certbot. More info here: https://certbot.eff.org/
 #
 # Optional Parameters:
-#   -U,      --update      	 Pull from master GitHub branch and sync files to fbctf folder.
+#   -U,      --update            Pull from master GitHub branch and sync files to fbctf folder.
+#   -R,      --no-repo-mode      Disables HHVM Repo Authoritative mode in production mode.
 #   -k PATH, --keyfile PATH      Path to supplied SSL key file.
 #   -C PATH, --certfile PATH     Path to supplied SSL certificate pem file.
 #   -D DOMAIN, --domain DOMAIN   Domain for the SSL certificate to be generated using letsencrypt.
@@ -46,6 +47,7 @@ P_ROOT="root"
 
 # Default values
 MODE="dev"
+NOREPOMODE=false
 TYPE="self"
 KEYFILE="none"
 CERTFILE="none"
@@ -53,6 +55,7 @@ DOMAIN="none"
 EMAIL="none"
 CODE_PATH="/vagrant"
 CTF_PATH="/var/www/fbctf"
+HHVM_CONFIG_PATH="/etc/hhvm/server.ini"
 
 # Arrays with valid arguments
 VALID_MODE=("dev" "prod")
@@ -72,9 +75,10 @@ function usage() {
   printf "\nArguments for TYPE:\n"
   printf "  self \tProvision will use a self-signed SSL certificate that will be generated.\n"
   printf "  own \tProvision will use the SSL certificate provided by the user.\n"
-  printf "  cerbot Provision will generate a SSL certificate using letsencrypt/certbot. More info here: https://certbot.eff.org/\n"
+  printf "  certbot Provision will generate a SSL certificate using letsencrypt/certbot. More info here: https://certbot.eff.org/\n"
   printf "\nOptional Parameters:\n"
   printf "  -U,      --update \t\tPull from master GitHub branch and sync files to fbctf folder.\n"
+  printf "  -R,      --no-repo-mode \tDisables HHVM Repo Authoritative mode in production mode.\n"
   printf "  -k PATH, --keyfile PATH \tPath to supplied SSL key file.\n"
   printf "  -C PATH, --certfile PATH \tPath to supplied SSL certificate pem file.\n"
   printf "  -D DOMAIN, --domain DOMAIN \tDomain for the SSL certificate to be generated using letsencrypt.\n"
@@ -90,7 +94,7 @@ function usage() {
   printf "\t%s -m dev -U -s /home/foobar/fbctf -d /var/fbctf\n" "${0}"
 }
 
-ARGS=$(getopt -n "$0" -o hm:c:Uk:C:D:e:s:d: -l "help,mode:,cert:,update,keyfile:,certfile:,domain:,email:,code:,destination:,docker" -- "$@")
+ARGS=$(getopt -n "$0" -o hm:c:URk:C:D:e:s:d: -l "help,mode:,cert:,update,repo-mode,keyfile:,certfile:,domain:,email:,code:,destination:,docker" -- "$@")
 
 eval set -- "$ARGS"
 
@@ -122,6 +126,10 @@ while true; do
       ;;
     -U|--update)
       UPDATE=true
+      shift
+      ;;
+    -R|--no-repo-mode)
+      NOREPOMODE=true
       shift
       ;;
     -k|--keyfile)
@@ -169,7 +177,7 @@ source "$CODE_PATH/extra/lib.sh"
 package git
 
 # Are we just updating a running fbctf?
-if [ "$UPDATE" == true ] ; then
+if [[ "$UPDATE" == true ]] ; then
     update_repo "$MODE" "$CODE_PATH" "$CTF_PATH"
     exit 0
 fi
@@ -199,7 +207,7 @@ if [[ "$CODE_PATH" != "$CTF_PATH" ]]; then
     # This is because sync'ing files is done with unison
     if [[ "$MODE" == "dev" ]]; then
         log "Configuring git to ignore permission changes"
-        git --git-dir="$CTF_PATH/" config core.filemode false
+        git -C "$CTF_PATH/" config core.filemode false
         log "Setting permissions"
         sudo chmod -R 777 "$CTF_PATH/"
     fi
@@ -221,8 +229,9 @@ package language-pack-en
 
 # Packages to be installed in dev mode
 if [[ "$MODE" == "dev" ]]; then
-    sudo apt-get install -y build-essential curl python-dev
+    sudo apt-get install -y build-essential python-all-dev python-setuptools
     package python-pip
+    sudo -H pip install --upgrade pip
     sudo -H pip install mycli
     package emacs
     package htop
@@ -234,24 +243,32 @@ package memcached
 # Install MySQL
 install_mysql "$P_ROOT"
 
-# Install git
-package git
-
 # Install HHVM
-install_hhvm "$CTF_PATH"
+install_hhvm "$CTF_PATH" "$HHVM_CONFIG_PATH"
 
 # Install Composer
 install_composer "$CTF_PATH"
+# This step has done `cd "$CTF_PATH"`
 composer.phar install
 
-# Install NPM and grunt
-package npm
+# In production, enable HHVM Repo Authoritative mode by default.
+# More info here: https://docs.hhvm.com/hhvm/advanced-usage/repo-authoritative
+if [[ "$MODE" == "prod" ]] && [[ "$NOREPOMODE" == false ]]; then
+  hhvm_performance "$CTF_PATH" "$HHVM_CONFIG_PATH"
+else
+  log "HHVM Repo Authoritative mode NOT enabled"
+fi
 
+# Install and update NPM
+package npm
 # Update NPM with itself: https://github.com/npm/npm/issues/14610
 sudo npm install -g npm@lts
 
+# Install node
 package nodejs-legacy
-sudo npm install
+
+# Install all required node_modules in the CTF folder
+sudo npm install --prefix "$CTF_PATH"
 sudo npm install -g grunt
 sudo npm install -g flow-bin
 
@@ -271,11 +288,9 @@ import_empty_db "root" "$P_ROOT" "$DB" "$CTF_PATH" "$MODE"
 # Make attachments folder world writable
 sudo chmod 777 "$CTF_PATH/src/data/attachments"
 sudo chmod 777 "$CTF_PATH/src/data/attachments/deleted"
-
-# If provisioning is in prod, improve HHVM performance
-if [[ "$MODE" == "prod" ]]; then
-    hhvm_performance "$CTF_PATH"
-fi
+# Make custom logos folder, and make it world writable
+sudo mkdir -p "$CTF_PATH/src/data/customlogos"
+sudo chmod 777 "$CTF_PATH/src/data/customlogos"
 
 # Display the final message, depending on the context
 if [[ -d "/vagrant" ]]; then

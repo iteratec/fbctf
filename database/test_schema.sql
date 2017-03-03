@@ -184,20 +184,27 @@ CREATE TABLE `configuration` (
 
 LOCK TABLES `configuration` WRITE;
 INSERT INTO `configuration` (field, value, description) VALUES("game", "0", "(Boolean) Game is ongoing");
-INSERT INTO `configuration` (field, value, description) VALUES("next_game", "0", "(Date) Next game to happen");
+INSERT INTO `configuration` (field, value, description) VALUES("game_paused", "0", "(Boolean) Game is paused");
+INSERT INTO `configuration` (field, value, description) VALUES("next_game", "0", "(Integer) Next game to happen");
 INSERT INTO `configuration` (field, value, description) VALUES("game_duration_value", "3", "(Integer) Value of the duration of the game");
 INSERT INTO `configuration` (field, value, description) VALUES("game_duration_unit", "h", "(Character) Unit of the duration of the game");
 INSERT INTO `configuration` (field, value, description) VALUES("start_ts", "0", "(Integer) Timestamp of start");
 INSERT INTO `configuration` (field, value, description) VALUES("end_ts", "0", "(Integer) Timestamp of end");
+INSERT INTO `configuration` (field, value, description) VALUES("pause_ts", "0", "(Integer) Timestamp of pause");
 INSERT INTO `configuration` (field, value, description) VALUES("timer", "0", "(Boolean) Timer is enabled");
 INSERT INTO `configuration` (field, value, description) VALUES("scoring", "0", "(Boolean) Ability score levels");
 INSERT INTO `configuration` (field, value, description) VALUES("gameboard", "1", "(Boolean) Refresh all data in the gameboard");
 INSERT INTO `configuration` (field, value, description) VALUES("progressive_cycle", "300", "(Integer) Frequency to take progressive scoreboard in seconds");
 INSERT INTO `configuration` (field, value, description) VALUES("bases_cycle", "5", "(Integer) Frequency to score base levels in seconds");
+INSERT INTO `configuration` (field, value, description) VALUES("autorun_cycle", "30", "(Integer) Frequency to cycle autorun in seconds");
 INSERT INTO `configuration` (field, value, description) VALUES("registration", "0", "(Boolean) Ability to register teams");
 INSERT INTO `configuration` (field, value, description) VALUES("registration_names", "0", "(Boolean) Registration will ask for names");
 INSERT INTO `configuration` (field, value, description) VALUES("registration_type", "1", "(Integer) Type of registration: 1 - Open; 2 - Tokenized;");
 INSERT INTO `configuration` (field, value, description) VALUES("registration_players", "3", "(Integer) Number of players per team");
+INSERT INTO `configuration` (field, value, description) VALUES("ldap", "0", "(Boolean) Ability to use LDAP to login");
+INSERT INTO `configuration` (field, value, description) VALUES("ldap_server", "ldap://localhost", "(String) LDAP Server");
+INSERT INTO `configuration` (field, value, description) VALUES("ldap_port", "389", "(Integer) LDAP Port");
+INSERT INTO `configuration` (field, value, description) VALUES("ldap_domain_suffix", "@localhost", "(String) LDAP Domain");
 INSERT INTO `configuration` (field, value, description) VALUES("login", "1", "(Boolean) Ability to login");
 INSERT INTO `configuration` (field, value, description) VALUES("login_select", "0", "(Boolean) Login selecting the team");
 INSERT INTO `configuration` (field, value, description) VALUES("login_strongpasswords", "0", "(Boolean) Enforce using strong passwords");

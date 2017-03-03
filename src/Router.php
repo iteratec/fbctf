@@ -13,18 +13,20 @@ class Router {
     if ($ajax) {
       return await self::genRouteAjax($page);
     } else if ($modal !== null) {
-      $xhp = await self::genRouteModel($page, strval($modal));
+      $xhp = await self::genRouteModal($page, strval($modal));
       return strval($xhp);
     } else {
+      await Control::genRunAutoRunScript();
       $response = await self::genRouteNormal($page);
       return strval($response);
     }
   }
 
-  private static async function genRouteModel(
+  private static async function genRouteModal(
     string $page,
     string $modal,
   ): Awaitable<:xhp> {
+    SessionUtils::sessionStart();
     switch ($page) {
       case 'action':
         return await (new ActionModalController())->genRender($modal);
@@ -96,6 +98,10 @@ class Router {
 
   public static function isRequestAjax(): bool {
     return Utils::getGET()->get('ajax') === 'true';
+  }
+
+  public static function isRequestModal(): bool {
+    return Utils::getGET()->get('modal') !== null;
   }
 
   // Check to see if the request is going through the router

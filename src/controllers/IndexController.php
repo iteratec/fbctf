@@ -109,10 +109,21 @@ class IndexController extends Controller {
     }
     $next_game = await Configuration::gen('next_game');
     $next_game = $next_game->getValue();
-    if ($next_game === "0") {
+    $game = await Configuration::gen('game');
+    $game = $game->getValue();
+    if ($game === '1') {
+      $next_game_text = tr('In Progress');
+      $countdown = array('--', '--', '--', '--');
+    } else if ($next_game === '0' || intval($next_game) < time()) {
       $next_game_text = tr('Soon');
+      $countdown = array('--', '--', '--', '--');
     } else {
-      $next_game_text = $next_game;
+      $next_game_text = date(tr('date and time format'), $next_game);
+      $game_start = new DateTime();
+      $game_start->setTimestamp(intval($next_game));
+      $now = new DateTime('now');
+      $countdown_diff = $now->diff($game_start);
+      $countdown = explode('-', $countdown_diff->format('%d-%h-%i-%s'));
     }
     return
       <div class="fb-row-container full-height fb-scroll">
@@ -126,10 +137,22 @@ class IndexController extends Controller {
               {$next_game_text}
             </h1>
             <ul class="upcoming-game-countdown">
-              <li><span class="count-number">--</span>{tr('_days')}</li>
-              <li><span class="count-number">--</span>{tr('_hours')}</li>
-              <li><span class="count-number">--</span>{tr('_minutes')}</li>
-              <li><span class="count-number">--</span>{tr('_seconds')}</li>
+              <li>
+                <span class="count-number">{$countdown[0]}</span>
+                {tr('_days')}
+              </li>
+              <li>
+                <span class="count-number">{$countdown[1]}</span>
+                {tr('_hours')}
+              </li>
+              <li>
+                <span class="count-number">{$countdown[2]}</span>
+                {tr('_minutes')}
+              </li>
+              <li>
+                <span class="count-number">{$countdown[3]}</span>
+                {tr('_seconds')}
+              </li>
             </ul>
             {$play_nav}
           </div>
@@ -285,6 +308,13 @@ class IndexController extends Controller {
       $token_field = <div></div>;
     }
 
+    $ldap = await Configuration::gen('ldap');
+    $ldap_domain_suffix = "";
+    if ($ldap->getValue() === '1') {
+      $ldap_domain_suffix = await Configuration::gen('ldap_domain_suffix');
+      $ldap_domain_suffix = $ldap_domain_suffix->getValue();
+    }
+
     $logos_section = await $this->genRenderLogosSelection();
     return
       <main
@@ -316,6 +346,7 @@ class IndexController extends Controller {
                   type="text"
                   maxlength={20}
                 />
+                {$ldap_domain_suffix}
               </div>
               <div class="form-el el--text">
                 <label for="">{tr('Password')}</label>
@@ -325,7 +356,40 @@ class IndexController extends Controller {
             </fieldset>
             <div class="fb-choose-emblem">
               <h6>{tr('Choose an Emblem')}</h6>
-              <div class="emblem-carousel">{$logos_section}</div>
+              <h6>
+                <a href="#" id="custom-emblem-link">
+                  {tr('or upload your own')}
+                </a>
+              </h6>
+              <div class="custom-emblem">
+                <input
+                  autocomplete="off"
+                  name="custom-emblem"
+                  id="custom-emblem-input"
+                  type="file"
+                  accept="image/*"
+                />
+                <img
+                  id="custom-emblem-preview"
+                  src=""
+                  height={62}
+                  width={80}>
+                </img>
+              </div>
+              <div class="emblem-carousel">
+                <div id="custom-emblem-carousel-notice">
+                  <div class="center-wrapper">
+                    <h6>
+                      <a href="#" id="custom-emblem-clear-link">
+                        {tr(
+                          'Clear your custom emblem to use a default emblem.',
+                        )}
+                      </a>
+                    </h6>
+                  </div>
+                </div>
+                {$logos_section}
+              </div>
             </div>
             <div class="form-el--actions fb-container container--small">
               <p>
@@ -352,6 +416,13 @@ class IndexController extends Controller {
         </div>;
     } else {
       $token_field = <div></div>;
+    }
+
+    $ldap = await Configuration::gen('ldap');
+    $ldap_domain_suffix = "";
+    if ($ldap->getValue() === '1') {
+      $ldap_domain_suffix = await Configuration::gen('ldap_domain_suffix');
+      $ldap_domain_suffix = $ldap_domain_suffix->getValue();
     }
 
     $logos_section = await $this->genRenderLogosSelection();
@@ -381,6 +452,7 @@ class IndexController extends Controller {
                   type="text"
                   maxlength={20}
                 />
+                {$ldap_domain_suffix}
               </div>
               <div class="form-el el--text">
                 <label for="">{tr('Password')}</label>
@@ -390,7 +462,40 @@ class IndexController extends Controller {
             </fieldset>
             <div class="fb-choose-emblem">
               <h6>{tr('Choose an Emblem')}</h6>
-              <div class="emblem-carousel">{$logos_section}</div>
+              <h6>
+                <a href="#" id="custom-emblem-link">
+                  {tr('or upload your own')}
+                </a>
+              </h6>
+              <div class="custom-emblem">
+                <input
+                  autocomplete="off"
+                  name="custom-emblem"
+                  id="custom-emblem-input"
+                  type="file"
+                  accept="image/*"
+                />
+                <img
+                  id="custom-emblem-preview"
+                  src=""
+                  height={62}
+                  width={80}>
+                </img>
+              </div>
+              <div class="emblem-carousel">
+                <div id="custom-emblem-carousel-notice">
+                  <div class="center-wrapper">
+                    <h6>
+                      <a href="#" id="custom-emblem-clear-link">
+                        {tr(
+                          'Clear your custom emblem to use a default emblem.',
+                        )}
+                      </a>
+                    </h6>
+                  </div>
+                </div>
+                {$logos_section}
+              </div>
             </div>
             <div class="form-el--actions fb-container container--small">
               <p>
@@ -448,6 +553,12 @@ class IndexController extends Controller {
 
   public async function genRenderLoginContent(): Awaitable<:xhp> {
     $login = await Configuration::gen('login');
+    $ldap = await Configuration::gen('ldap');
+    $ldap_domain_suffix = "";
+    if ($ldap->getValue() === '1') {
+      $ldap_domain_suffix = await Configuration::gen('ldap_domain_suffix');
+      $ldap_domain_suffix = $ldap_domain_suffix->getValue();
+    }
     if ($login->getValue() === '1') {
       $login_team =
         <input
@@ -455,6 +566,7 @@ class IndexController extends Controller {
           name="team_name"
           type="text"
           maxlength={20}
+          autofocus={true}
         />;
       $login_select = "off";
       $login_select_config = await Configuration::gen('login_select');
@@ -496,7 +608,7 @@ class IndexController extends Controller {
               <fieldset class="form-set fb-container container--small">
                 <div class="form-el el--text">
                   <label for="">{tr('Team Name')}</label>
-                  {$login_team}
+                  {$login_team} {$ldap_domain_suffix}
                 </div>
                 <div class="form-el el--text">
                   <label for="">{tr('Password')}</label>
@@ -521,6 +633,53 @@ class IndexController extends Controller {
             </form>
           </div>
         </main>;
+    } else if (Utils::getGET()->get('admin') === 'true') {
+      return
+        <main role="main" class="fb-main page--login full-height fb-scroll">
+          <header class="fb-section-header fb-container">
+            <h1 class="fb-glitch" data-text={tr('Admin Login')}>
+              {tr('Admin Login')}
+            </h1>
+            <p class="inner-container">
+              {tr(
+                'Team login is disabled. Only admins can login at this time. ',
+              )}
+            </p>
+          </header>
+          <div class="fb-login">
+            <form class="fb-form">
+              <input type="hidden" name="action" value="login_team" />
+              <input type="hidden" name="login_select" value={"off"} />
+              <fieldset class="form-set fb-container container--small">
+                <div class="form-el el--text">
+                  <label for="">{tr('Team Name')}</label>
+                  <input
+                    autocomplete="off"
+                    name="team_name"
+                    type="text"
+                    maxlength={20}
+                  />
+                </div>
+                <div class="form-el el--text">
+                  <label for="">{tr('Password')}</label>
+                  <input
+                    autocomplete="off"
+                    name="password"
+                    type="password"
+                  />
+                </div>
+              </fieldset>
+              <div class="form-el--actions">
+                <button
+                  id="login_button"
+                  class="fb-cta cta--yellow"
+                  type="button">
+                  {tr('Login')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </main>;
     } else {
       return
         <div class="fb-row-container full-height fb-scroll">
@@ -538,6 +697,11 @@ class IndexController extends Controller {
                 <div class="form-el--actions">
                   <a href="/index.php?page=login" class="fb-cta cta--yellow">
                     {tr('Try Again')}
+                  </a>
+                </div>
+                <div class="form-el--actions">
+                  <a href="/index.php?page=login&admin=true" class="fb-cta">
+                    {tr('Admin Login')}
                   </a>
                 </div>
               </form>
