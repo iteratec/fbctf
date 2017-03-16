@@ -25,4 +25,5 @@ RUN apt-get update \
 CMD ["./extra/service_startup.sh"]
 
 EXPOSE 443
+EXPOSE 8080
 VOLUME /var/lib/mysql
