@@ -323,6 +323,22 @@ function set_password() {
   mysql -u "$__user" --password="$__db_pwd" "$__db" -e "INSERT INTO teams (id, name, password_hash, admin, protected, logo, created_ts) VALUES (1, 'admin', '$HASH', 1, 1, 'admin', NOW());"
 }
 
+function set_admin() {
+  local __admin_user=$1
+  local __admin_pwd=$2
+  local __user=$3
+  local __db_pwd=$4
+  local __db=$5
+  local __path=$6
+
+  log "Trying to reset the admin user '$__admin_user' with and password!"
+
+  HASH=$(hhvm -f "$__path/extra/hash.php" "$__admin_pwd")
+
+  # Trying to update the existing admin user
+  mysql -u "$__user" --password="$__db_pwd" "$__db" -e "UPDATE teams SET name='$__admin_user', password_hash='$HASH' WHERE id=1 AND admin=1;"
+}
+
 function update_repo() {
   local __mode=$1
   local __code_path=$2
