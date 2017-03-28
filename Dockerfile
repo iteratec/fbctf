@@ -24,6 +24,10 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 CMD ["./extra/service_startup.sh"]
 
+# FBCT with HTTPS
 EXPOSE 443
+# FBCT without HTTP
 EXPOSE 8080
+# Open mysql port for external updates (add account)
+EXPOSE 3306
 VOLUME /var/lib/mysql
