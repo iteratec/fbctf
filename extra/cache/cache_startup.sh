@@ -2,10 +2,10 @@
 
 set -e
 
-service memcached restart
+sudo service memcached restart
 
 while true; do
     sleep 5
 
-    service memcached status
+    sudo service memcached status
 done
